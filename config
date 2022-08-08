@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 _DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export MINIO_IMAGE=${MINIO_IMAGE:="$(awk -F '[ :]' '{print $2}' "${_DIR}/Dockerfile")"}
-export MINIO_IMAGE_IMAGE_VERSION=${POSTGRES_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' "${_DIR}/Dockerfile")"}
-export MINIO_ROOT=${POSTGRES_ROOT:="$DOKKU_LIB_ROOT/services/minio"}
-export MINIO_HOST_ROOT=${POSTGRES_HOST_ROOT:=$POSTGRES_ROOT}
+export MINIO_IMAGE_IMAGE_VERSION=${MINIO_IMAGE_VERSION:="$(awk -F '[ :]' '{print $3}' "${_DIR}/Dockerfile")"}
+export MINIO_ROOT=${MINIO_ROOT:="$DOKKU_LIB_ROOT/services/minio"}
+export MINIO_HOST_ROOT=${MINIO_HOST_ROOT:=$MINIO_ROOT}
 
 export PLUGIN_UNIMPLEMENTED_SUBCOMMANDS=()
 export PLUGIN_COMMAND_PREFIX="minio"
@@ -33,4 +33,4 @@ export PLUGIN_S3BACKUP_IMAGE="dokku/s3backup:0.10.3"
 export PLUGIN_WAIT_IMAGE="dokku/wait:0.4.3"
 export PLUGIN_MINIO_CLIENT_IMAGE="minio/mc:RELEASE.2022-08-05T08-01-28Z"
 
-export MINIO_CONFIG_OPTIONS=${POSTGRES_CONFIG_OPTIONS:=""}
+export MINIO_CONFIG_OPTIONS=${MINIO_CONFIG_OPTIONS:=""}
