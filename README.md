@@ -1,6 +1,6 @@
-# [WIP] dokku minio
+# [WIP] dokku objectstore
 
-S3-compatible object storage based on minio [minio](https://min.io)
+S3-compatible object storage backed by minio [minio](https://min.io). Implementation based on [dokku-postgres](https://github.com/dokku/dokku-postgres)
 
 ## Requirements
 
@@ -11,18 +11,18 @@ S3-compatible object storage based on minio [minio](https://min.io)
 
 ```shell
 # on 0.19.x+
-sudo dokku plugin:install https://github.com/kenob/dokku-minio.git minio
+sudo dokku plugin:install https://github.com/kenob/dokku-objectstore.git minio
 ```
 
 ## Commands
 
 ```
-minio:create <service>                      # create a minio service
-minio:destroy <service>                     # destroy a minio service
-minio:link <service> <app>                  
-minio:enter <service>
-minio:exists <service>
-minio:start <service>                       # start minio service container
-minio:restart <service>                     # graceful shutdown and restart of the minio service container
-minio:stop <service>                        # graceful shutdown of the minio service container
+objectstore:create <service>                      # create a minio service
+objectstore:destroy <service>                     # destroy a minio service
+objectstore:link <service> <app>                  
+objectstore:enter <service>
+objectstore:exists <service>
+objectstore:start <service>                       # start minio service container
+objectstore:restart <service>                     # graceful shutdown and restart of the minio service container
+objectstore:stop <service>                        # graceful shutdown of the minio service container
 ```
