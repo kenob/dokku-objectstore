@@ -103,6 +103,12 @@ service_url() {
   echo "$PLUGIN_SCHEME://$SERVICE_DNS_HOSTNAME:${PLUGIN_DATASTORE_PORTS[0]}"
 }
 
+service_console_url() {
+  local SERVICE="$1"
+  local SERVICE_DNS_HOSTNAME="$(service_dns_hostname "$SERVICE")"
+  echo "http://$SERVICE_DNS_HOSTNAME:${PLUGIN_DATASTORE_PORTS[1]}"
+}
+
 get_database_name() {
   declare desc="retrieve a sanitized database name"
   declare SERVICE="$1"
@@ -527,6 +533,7 @@ service_info() {
   declare SERVICE="$1" INFO_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
+  local SERVICE_CONSOLE=$(service_console_url "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local SERVICE_CONTAINER_ID="$(cat "$SERVICE_ROOT/ID")"
   local flag key valid_flags
@@ -536,6 +543,7 @@ service_info() {
     "--config-options: $(cat "$SERVICE_ROOT/CONFIG_OPTIONS" 2>/dev/null || true)"
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
+    "--console-dsn: ${SERVICE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
     "--id: ${SERVICE_CONTAINER_ID}"
     "--internal-ip: $(get_container_ip "${SERVICE_CONTAINER_ID}")"
@@ -622,8 +630,8 @@ service_link() {
     no_restart_flag="--no-restart"
   fi
   config_set $no_restart_flag "$APP" "${ALIAS}_URL=$SERVICE_URL"
-  config_set $no_restart_flag "$APP" "S3_ACCESS_KEY=$SERVICE_URL"
-  config_set $no_restart_flag "$APP" "S3_SECRET_KEY=$SERVICE_URL"
+  config_set $no_restart_flag "$APP" "S3_ACCESS_KEY=$ACCESS_KEY"
+  config_set $no_restart_flag "$APP" "S3_SECRET_KEY=$SECRET_KEY"
   plugn trigger service-action post-link-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
 }
 
