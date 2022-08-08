@@ -134,3 +134,39 @@ service_create() {
   service_create_container "$SERVICE" "$ACCESS_KEY" "$SECRET_KEY"
   plugn trigger service-action post-create-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
 }
+
+service_start() {
+  local SERVICE="$1"
+  local QUIET="$2"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local SERVICE_NAME="$(get_service_name "$SERVICE")"
+  local ID=$(docker ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  if [[ -n $ID ]]; then
+    [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
+    if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
+      [[ -z $QUIET ]] && dokku_log_warn "Updating local container ID"
+      echo "$ID" >"$SERVICE_ROOT/ID"
+    fi
+    return 0
+  fi
+
+  dokku_log_info2_quiet "Starting container"
+  local PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local PASSWORD="$(service_password "$SERVICE")"
+
+  if [[ -n $PREVIOUS_ID ]]; then
+    docker start "$PREVIOUS_ID" >/dev/null
+    service_port_unpause "$SERVICE"
+    dokku_log_info2 "Container started"
+  elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
+    service_create_container "$SERVICE"
+  else
+    if ! service_image_exists "$SERVICE"; then
+      [[ -f "$SERVICE_ROOT/IMAGE" ]] && PLUGIN_IMAGE="$(cat "$SERVICE_ROOT/IMAGE")"
+      [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
+      dokku_log_verbose_quiet "Missing image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION for $SERVICE"
+    else
+      dokku_log_verbose_quiet "Neither container nor valid configuration exists for $SERVICE"
+    fi
+  fi
+}
