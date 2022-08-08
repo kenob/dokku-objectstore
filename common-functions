@@ -16,6 +16,41 @@ add_to_links_file() {
   sort "$LINKS_FILE" -u -o "$LINKS_FILE"
 }
 
+auth_service_filter() {
+  declare desc="calls user-service plugin trigger"
+  declare SERVICES=("$@")
+  local user_auth_count
+
+  if [[ "${#SERVICES[@]}" -eq 0 ]]; then
+    return
+  fi
+
+  user_auth_count="$(find "$PLUGIN_PATH"/enabled/*/user-auth-service 2>/dev/null | wc -l)"
+
+  # no plugin trigger exists
+  if [[ $user_auth_count == 0 ]]; then
+    # echo out all the services since there is no plugin trigger
+    for SERVICE in "${SERVICES[@]}"; do
+      [[ -n "$SERVICE" ]] && echo "$SERVICE"
+    done
+    return 0
+  fi
+
+  # this plugin trigger exists in the core `20_events` plugin
+  if [[ "$user_auth_count" == 1 ]] && [[ -f "$PLUGIN_PATH"/enabled/20_events/user-auth-service ]]; then
+    # echo out all the services since there is no valid plugin trigger
+    for SERVICE in "${SERVICES[@]}"; do
+      [[ -n "$SERVICE" ]] && echo "$SERVICE"
+    done
+    return 0
+  fi
+
+  export SSH_USER=${SSH_USER:=$USER}
+  export SSH_NAME=${NAME:="default"}
+  # the output of this trigger should be all the services a user has access to
+  plugn trigger user-auth-service "$SSH_USER" "$SSH_NAME" "$PLUGIN_COMMAND_PREFIX" "${SERVICES[@]}"
+}
+
 fn-services-list() {
   declare desc="prints a filtered list of all local apps"
   declare FILTER="$1"
@@ -234,6 +269,58 @@ service_app_links() {
       fi
     done
   done
+}
+
+service_backup() {
+  declare desc="create a backup of a service to an existing s3 bucket"
+  declare SERVICE="$1" BUCKET_NAME="$2" USE_IAM_OPTIONAL_FLAG="$3"
+  local SERVICE_BACKUP_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup"
+  local BACKUP_ENCRYPTION_CONFIG_ROOT="$PLUGIN_DATA_ROOT/$SERVICE/backup-encryption"
+  local AWS_ACCESS_KEY_ID_FILE="$SERVICE_BACKUP_ROOT/AWS_ACCESS_KEY_ID"
+  local AWS_SECRET_ACCESS_KEY_FILE="$SERVICE_BACKUP_ROOT/AWS_SECRET_ACCESS_KEY"
+  local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
+  local ID="$(cat "$SERVICE_ROOT/ID")"
+  local BACKUP_PARAMETERS=""
+
+  if [[ -z "$USE_IAM_OPTIONAL_FLAG" ]]; then
+    [[ ! -f "$AWS_ACCESS_KEY_ID_FILE" ]] && dokku_log_fail "Missing AWS_ACCESS_KEY_ID file"
+    [[ ! -f "$AWS_SECRET_ACCESS_KEY_FILE" ]] && dokku_log_fail "Missing AWS_SECRET_ACCESS_KEY file"
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_ACCESS_KEY_ID=$(cat "$AWS_ACCESS_KEY_ID_FILE") -e AWS_SECRET_ACCESS_KEY=$(cat "$AWS_SECRET_ACCESS_KEY_FILE")"
+  elif [[ "$USE_IAM_OPTIONAL_FLAG" != "--use-iam" ]] && [[ "$USE_IAM_OPTIONAL_FLAG" != "-u" ]]; then
+    dokku_log_fail "Provide AWS credentials or use the --use-iam flag"
+  fi
+
+  BACKUP_TMPDIR=$(mktemp -d --tmpdir)
+  trap 'rm -rf "$BACKUP_TMPDIR" > /dev/null' RETURN INT TERM EXIT
+
+  docker inspect "$ID" &>/dev/null || dokku_log_fail "Service container does not exist"
+  is_container_status "$ID" "Running" || dokku_log_fail "Service container is not running"
+
+  (service_export "$SERVICE" >"${BACKUP_TMPDIR}/export")
+
+  # Build parameter list for s3backup tool
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BUCKET_NAME=$BUCKET_NAME"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e BACKUP_NAME=${PLUGIN_COMMAND_PREFIX}-${SERVICE}"
+  BACKUP_PARAMETERS="$BACKUP_PARAMETERS -v ${BACKUP_TMPDIR}:/backup"
+
+  if [[ -f "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_DEFAULT_REGION=$(cat "$SERVICE_BACKUP_ROOT/AWS_DEFAULT_REGION")"
+  fi
+
+  if [[ -f "$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e AWS_SIGNATURE_VERSION=$(cat "$SERVICE_BACKUP_ROOT/AWS_SIGNATURE_VERSION")"
+  fi
+
+  if [[ -f "$SERVICE_BACKUP_ROOT/ENDPOINT_URL" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENDPOINT_URL=$(cat "$SERVICE_BACKUP_ROOT/ENDPOINT_URL")"
+  fi
+
+  if [[ -f "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY" ]]; then
+    BACKUP_PARAMETERS="$BACKUP_PARAMETERS -e ENCRYPTION_KEY=$(cat "$BACKUP_ENCRYPTION_CONFIG_ROOT/ENCRYPTION_KEY")"
+  fi
+
+  # shellcheck disable=SC2086
+  docker run --rm $BACKUP_PARAMETERS "$PLUGIN_S3BACKUP_IMAGE"
 }
 
 service_commit_config() {
