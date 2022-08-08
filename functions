@@ -65,7 +65,7 @@ service_create_container() {
     --label dokku.service=minio \
     "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" \
     $CONFIG_OPTIONS \
-    server /var/lib/minio/data --address ":$PLUGIN_DATASTORE_PORTS[0]" --console-address ":$PLUGIN_DATASTORE_PORTS[1]")
+    server /var/lib/minio/data --address ":${PLUGIN_DATASTORE_PORTS[0]}" --console-address ":${PLUGIN_DATASTORE_PORTS[1]}")
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
