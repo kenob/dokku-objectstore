@@ -236,10 +236,6 @@ service_app_links() {
   done
 }
 
-service_backup() {
-  
-}
-
 service_commit_config() {
   declare SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
