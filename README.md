@@ -11,7 +11,7 @@ S3-compatible object storage backed by [minio](https://min.io). Implementation i
 
 ```shell
 # on 0.19.x+
-sudo dokku plugin:install https://github.com/kenob/dokku-objectstore.git minio
+sudo dokku plugin:install https://github.com/kenob/dokku-objectstore.git objectstore
 ```
 
 ## Commands
