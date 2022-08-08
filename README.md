@@ -17,12 +17,12 @@ sudo dokku plugin:install https://github.com/kenob/dokku-objectstore.git minio
 ## Commands
 
 ```
-objectstore:create <service>                      # create a minio service
-objectstore:destroy <service>                     # destroy a minio service
+objectstore:create <service>                      # create an objectstore service
+objectstore:destroy <service>                     # destroy an objectstore service
 objectstore:link <service> <app>                  
 objectstore:enter <service>
 objectstore:exists <service>
-objectstore:start <service>                       # start minio service container
-objectstore:restart <service>                     # graceful shutdown and restart of the minio service container
-objectstore:stop <service>                        # graceful shutdown of the minio service container
+objectstore:start <service>                       # start an objectstore service container
+objectstore:restart <service>                     # graceful shutdown and restart of the objectstore service container
+objectstore:stop <service>                        # graceful shutdown of the objectstore service container
 ```
