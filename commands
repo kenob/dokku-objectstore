@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+case "$1" in
+  help | minio:help)
+    help_content_func () {
+      declare desc="return help_content string"
+      cat<<help_content
+    minio:create <app>, Creates a minio cluster
+    minio:destroy <app>, Destroys the cluster
+help_content
+    }
+
+    if [[ $1 = "minio:help" ]] ; then
+        echo -e 'Usage: dokku minio<:command> [...other]]'
+        echo ''
+        echo 'Additional commands:'
+        help_content_func | sort | column -c2 -t -s,
+    else
+        help_content_func
+    fi
+    ;;
+
+  *)
+    exit $DOKKU_NOT_IMPLEMENTED_EXIT
+    ;;
+
+esac
