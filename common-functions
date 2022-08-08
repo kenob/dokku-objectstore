@@ -533,7 +533,7 @@ service_info() {
   declare SERVICE="$1" INFO_FLAG="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_URL=$(service_url "$SERVICE")
-  local SERVICE_CONSOLE=$(service_console_url "$SERVICE")
+  local SERVICE_CONSOLE_URL=$(service_console_url "$SERVICE")
   local PORT_FILE="$SERVICE_ROOT/PORT"
   local SERVICE_CONTAINER_ID="$(cat "$SERVICE_ROOT/ID")"
   local flag key valid_flags
@@ -543,7 +543,7 @@ service_info() {
     "--config-options: $(cat "$SERVICE_ROOT/CONFIG_OPTIONS" 2>/dev/null || true)"
     "--data-dir: ${SERVICE_ROOT}/data"
     "--dsn: ${SERVICE_URL}"
-    "--console-dsn: ${SERVICE_URL}"
+    "--console-dsn: ${SERVICE_CONSOLE_URL}"
     "--exposed-ports: $(service_exposed_ports "$SERVICE")"
     "--id: ${SERVICE_CONTAINER_ID}"
     "--internal-ip: $(get_container_ip "${SERVICE_CONTAINER_ID}")"
