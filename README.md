@@ -1,6 +1,6 @@
 # [WIP] dokku objectstore
 
-S3-compatible object storage backed by [minio](https://min.io). Implementation based on [dokku-postgres](https://github.com/dokku/dokku-postgres)
+S3-compatible object storage backed by [minio](https://min.io). Implementation inspired by [dokku-postgres](https://github.com/dokku/dokku-postgres)
 
 ## Requirements
 
