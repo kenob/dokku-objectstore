@@ -72,7 +72,7 @@ service_create_container() {
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Setting up users"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_MINIO_CLIENT_IMAGE" --entrypoint=/bin/sh mc admin user add local $ACCESS_KEY $SECRET_KEY" >/dev/null
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_MINIO_CLIENT_IMAGE" --entrypoint=/bin/sh mc admin user add local $ACCESS_KEY $SECRET_KEY >/dev/null
 
   dokku_log_verbose_quiet "Securing connection to database"
 #   service_stop "$SERVICE" >/dev/null
