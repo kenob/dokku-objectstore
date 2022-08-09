@@ -44,7 +44,7 @@ service-clone-cmd() {
   dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
-  cp -r "$SERVICE_ROOT/$OLD_SERVICE/data/*" "$PLUGIN_DATA_ROOT/$NEW_SERVICE/data"
+  cp -r "$PLUGIN_DATA_ROOT/$OLD_SERVICE/data/*" "$PLUGIN_DATA_ROOT/$NEW_SERVICE/data"
   dokku_log_info2 "Done"
 }
 
