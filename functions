@@ -222,6 +222,7 @@ service_connect() {
 
   local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
+    -it \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/bash \
     -v $TMPDIR/.bashrc:/root/.bashrc \
