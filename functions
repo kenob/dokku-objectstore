@@ -23,8 +23,6 @@ is_valid_service_name() {
 
 service_create_container() {
   local SERVICE="$1"
-  local ACCESS_KEY="$2"
-  local SECRET_KEY="$3"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_HOST_ROOT="$PLUGIN_DATA_HOST_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
@@ -57,8 +55,8 @@ service_create_container() {
   ID=$(docker run --name "$SERVICE_NAME" \
     $MEMORY_LIMIT $SHM_SIZE \
     -v "$SERVICE_HOST_ROOT/data:/var/lib/minio/data" \
-    -e "MINIO_ROOT_USER=$MINIO_ROOT_USER" \
-    -e "MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD" \
+    -e "MINIO_ROOT_USER=$ROOT_USER" \
+    -e "MINIO_ROOT_PASSWORD=$ROOT_PASSWORD" \
     --env-file="$SERVICE_ROOT/ENV" \
     -d --restart always \
     --label dokku=service \
@@ -140,19 +138,19 @@ service_create() {
     dokku_log_warn "Specified root password may not be as secure as the auto-generated password"
   fi
 
-  echo "$ACCESS_KEY" >"$SERVICE_ROOT/ACCESS_KEY"
+  echo "$ACCESS_KEY" > "$SERVICE_ROOT/ACCESS_KEY"
   chmod 640 "$SERVICE_ROOT/ACCESS_KEY"
-  echo "$SECRET_KEY" >"$SERVICE_ROOT/SECRET_KEY"
+  echo "$SECRET_KEY" > "$SERVICE_ROOT/SECRET_KEY"
   chmod 640 "$SERVICE_ROOT/SECRET_KEY"
-  echo "$ROOT_PASSWORD" >"$SERVICE_ROOT/ROOTPASSWORD"
+  echo "$ROOT_PASSWORD" > "$SERVICE_ROOT/ROOTPASSWORD"
   chmod 640 "$SERVICE_ROOT/ROOTPASSWORD"
-  echo "$ROOT_USER" >"$SERVICE_ROOT/ROOTUSER"
+  echo "$ROOT_USER" > "$SERVICE_ROOT/ROOTUSER"
   chmod 640 "$SERVICE_ROOT/ROOTUSER"
 
   service_commit_config "$SERVICE"
   write_database_name "$SERVICE"
   plugn trigger service-action post-create "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
-  service_create_container "$SERVICE" "$ACCESS_KEY" "$SECRET_KEY"
+  service_create_container "$SERVICE"
   plugn trigger service-action post-create-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
 }
 
