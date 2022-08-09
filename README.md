@@ -19,6 +19,8 @@ sudo dokku plugin:install https://github.com/kenob/dokku-objectstore.git objects
 ```
 objectstore:create <service>                      # create an objectstore service
 objectstore:destroy <service>                     # destroy an objectstore service
+objectstore:clone <service>                       # clone a service
+objectstore:connect <service>                     # connect to an objectstore service
 objectstore:link <service> <app>                  
 objectstore:enter <service>
 objectstore:exists <service>

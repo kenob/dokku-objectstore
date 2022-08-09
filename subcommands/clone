@@ -22,6 +22,7 @@ service-clone-cmd() {
   local cmd="$PLUGIN_COMMAND_PREFIX:clone" argv=("$@")
   [[ ${argv[0]} == "$cmd" ]] && shift 1
   declare SERVICE="$1" NEW_SERVICE="$2" CLONE_FLAGS_LIST=("${@:3}")
+  local OLD_SERVICE=$SERVICE
   is_implemented_command "$cmd" || dokku_log_fail "Not yet implemented"
 
   [[ -z "$SERVICE" ]] && dokku_log_fail "Please specify a valid name for the service"
@@ -43,7 +44,7 @@ service-clone-cmd() {
   dokku_log_info2 "Cloning $SERVICE to $NEW_SERVICE @ $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION"
   service_create "$NEW_SERVICE" "${@:3}"
   dokku_log_info1 "Copying data from $SERVICE to $NEW_SERVICE"
-  cp -r $SERVICE_ROOT/data "$PLUGIN_DATA_ROOT/$NEW_SERVICE/data"
+  cp -r "$SERVICE_ROOT/$OLD_SERVICE/data/*" "$PLUGIN_DATA_ROOT/$NEW_SERVICE/data"
   dokku_log_info2 "Done"
 }
 
