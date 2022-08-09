@@ -213,7 +213,7 @@ service_connect() {
   alias pipe='mc pipe $SERVICE_NAME'
   alias find='mc find $SERVICE_NAME'
   alias tree='mc tree $SERVICE_NAME'
-  mc --quiet --autocompletion
+  mc --quiet --autocompletion > /dev/null
   " > $TMPDIR/.bashrc
 
   echo "
