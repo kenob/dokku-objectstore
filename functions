@@ -70,7 +70,7 @@ service_create_container() {
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Setting up user"
-  local TARGET_IP_ADDRESS="$(docker inspect "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --format '{{ .NetworkSettings.IPAddress }}')"
+  local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/sh "$PLUGIN_MINIO_CLIENT_IMAGE" \
@@ -198,8 +198,9 @@ service_connect() {
 
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
+  local ID=$(cat $SERVICE_ROOT/ID)
 
-  local TARGET_IP_ADDRESS="$(docker inspect "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" --format '{{ .NetworkSettings.IPAddress }}')"
+  local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/bash "$PLUGIN_MINIO_CLIENT_IMAGE" \
