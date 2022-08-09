@@ -205,7 +205,7 @@ service_connect() {
 
   echo "
   export SHELL=/bin/bash
-  export PS1=\"\e[0;32m mc ($SERVICE_NAME)> \e[0m\";
+  export PS1=\"\e[0;36m mc ($SERVICE_NAME)> \e[0m\";
   alias ls='mc ls "$SERVICE_NAME"'
   alias cp='mc cp "$SERVICE_NAME"'
   alias cat='mc cat $SERVICE_NAME'
