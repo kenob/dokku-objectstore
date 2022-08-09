@@ -229,8 +229,8 @@ service_connect() {
     -it \
     --env=LANG=C.UTF-8 --env=LC_ALL=C.UTF-8 -i $SERVICE_TTY_OPTS \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
-    --entrypoint=/bin/sh \
+    --entrypoint=/bin/bash \
     -v $TMPDIR/issue:/etc/issue \
-    -v $TMPDIR/.bashrc:/root/.shrc \
+    -v $TMPDIR/.bashrc:/root/.bashrc \
     "$PLUGIN_MINIO_CLIENT_IMAGE" > /dev/null
 }
