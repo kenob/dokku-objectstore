@@ -225,7 +225,8 @@ service_connect() {
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -it \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
-    --entrypoint=/bin/bash \
-    -v $TMPDIR/.bashrc:/root/.bashrc \
+    --entrypoint=/bin/sh \
+    -v $TMPDIR/issue:/etc/issue \
+    -v $TMPDIR/.bashrc:/root/.shrc \
     "$PLUGIN_MINIO_CLIENT_IMAGE" > /dev/null
 }
