@@ -205,6 +205,7 @@ service_connect() {
 
   echo "
   export SHELL=/bin/bash
+  mc --quiet --autocompletion > /dev/null
   export PS1=\"\e[0;36m mc ($SERVICE_NAME)> \e[0m\";
   alias ls='mc ls "$SERVICE_NAME"'
   alias cp='mc cp "$SERVICE_NAME"'
@@ -213,7 +214,6 @@ service_connect() {
   alias pipe='mc pipe "$SERVICE_NAME"'
   alias find='mc find "$SERVICE_NAME"'
   alias tree='mc tree "$SERVICE_NAME"'
-  mc --quiet --autocompletion > /dev/null
   " > $TMPDIR/.bashrc
 
   echo "
