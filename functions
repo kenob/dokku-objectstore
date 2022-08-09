@@ -72,11 +72,14 @@ service_create_container() {
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Setting up user"
- local TARGET_IP_ADDRESS="$(docker inspect $SERVICE_NAME:$PLUGIN_COMMAND_PREFIX --format '{{ .NetworkSettings.IPAddress }}')"
+  local TARGET_IP_ADDRESS="$(docker inspect $SERVICE_NAME:$PLUGIN_COMMAND_PREFIX --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" 
     -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}"
     --entrypoint=/bin/sh "$PLUGIN_MINIO_CLIENT_IMAGE" \
-    -c "mc admin user add $SERVICE_NAME $ACCESS_KEY $SECRET_KEY" > /dev/null
+    -c "
+    mc admin user add $SERVICE_NAME $ACCESS_KEY $SECRET_KEY;
+    mc admin policy set $SERVICE_NAME readwrite user=$ACCESS_KEY
+    " > /dev/null
 
   dokku_log_verbose_quiet "Securing connection to database"
 #   service_stop "$SERVICE" >/dev/null
@@ -118,19 +121,33 @@ service_create() {
   
   SECRET_KEY=$(openssl rand -hex 16)
   ACCESS_KEY=$(openssl rand -hex 16)
-  if [[ -n "$SERVICE_ACCESS_KEY" ]]; then
+  ROOT_USER=$(openssl rand -hex 16)
+  ROOT_PASSWORD=$(openssl rand -hex 16)
+  if [[ -n "$ROOT_USER" ]]; then
     ACCESS_KEY="$ACCESS_KEY"
-    dokku_log_warn "Specified password may not be as secure as the auto-generated password"
+    dokku_log_warn "Specified access key may not be as secure as the auto-generated password"
   fi
   if [[ -n "$SERVICE_SECRET_KEY" ]]; then
     SECRET_KEY="$SERVICE_SECRET_KEY"
-    dokku_log_warn "Specified password may not be as secure as the auto-generated password"
+    dokku_log_warn "Specified secret key may not be as secure as the auto-generated password"
+  fi
+  if [[ -n "$ROOT_USER" ]]; then
+    SECRET_KEY="$ROOT_USER"
+    dokku_log_warn "Specified root user may not be as secure as the auto-generated password"
+  fi
+  if [[ -n "$ROOT_PASSWORD" ]]; then
+    SECRET_KEY="$ROOT_PASSWORD"
+    dokku_log_warn "Specified root password may not be as secure as the auto-generated password"
   fi
 
   echo "$ACCESS_KEY" >"$SERVICE_ROOT/ACCESS_KEY"
   chmod 640 "$SERVICE_ROOT/ACCESS_KEY"
   echo "$SECRET_KEY" >"$SERVICE_ROOT/SECRET_KEY"
   chmod 640 "$SERVICE_ROOT/SECRET_KEY"
+  echo "$ROOT_PASSWORD" >"$SERVICE_ROOT/ROOTPASSWORD"
+  chmod 640 "$SERVICE_ROOT/ROOTPASSWORD"
+  echo "$ROOT_USER" >"$SERVICE_ROOT/ROOTUSER"
+  chmod 640 "$SERVICE_ROOT/ROOTUSER"
 
   service_commit_config "$SERVICE"
   write_database_name "$SERVICE"
@@ -186,9 +203,11 @@ service_connect() {
 
   local TARGET_IP_ADDRESS="$(docker inspect $SERVICE_NAME:$PLUGIN_COMMAND_PREFIX --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" 
-    -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}"
+    -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}"
     --entrypoint=/bin/bash "$PLUGIN_MINIO_CLIENT_IMAGE" \
     -c "
+    mc --autocompletion
+    export PS1="\e[0;32m mc $SERVICE_NAME \e[0m"
     alias ls='mc ls $SERVICE_NAME';
     alias cp='mc cp $SERVICE_NAME';
     alias cat='mc cat $SERVICE_NAME';
@@ -196,8 +215,8 @@ service_connect() {
     alias pipe='mc pipe $SERVICE_NAME';
     alias find='mc find $SERVICE_NAME';
     alias tree='mc tree $SERVICE_NAME';
-    echo 'Service is aliased as \'$SERVICE_NAME\'. Use the mc (https://docs.min.io/docs/minio-client-complete-guide) to explore it';
     echo 'For convenience, ls, cp, cat, mkdir, pipe, find, tree have been aliased to run \'mc <command> ${SERVICE_NAME}\'';
+    echo 'See https://docs.min.io/docs/minio-client-complete-guide for more commands';
     bash
     " > /dev/null
 }
