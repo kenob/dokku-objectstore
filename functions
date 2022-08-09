@@ -200,24 +200,31 @@ service_connect() {
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
   local ID=$(cat $SERVICE_ROOT/ID)
 
+  TMPDIR=$(mktemp -d --tmpdir)
+  trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
+
+  echo "
+  export SHELL=/bin/bash
+  alias ls='mc ls $SERVICE_NAME'
+  alias cp='mc cp $SERVICE_NAME'
+  alias cat='mc cat $SERVICE_NAME'
+  alias mkdir='mc mb $SERVICE_NAME'
+  alias pipe='mc pipe $SERVICE_NAME'
+  alias find='mc find $SERVICE_NAME'
+  alias tree='mc tree $SERVICE_NAME'
+  mc --quiet --autocompletion
+  " > $TMPDIR/.bashrc
+
+  echo "
+  For convenience, ls, cp, cat, mkdir, pipe, find, tree have been aliased to run \'mc <command> ${SERVICE_NAME}\'\n
+  See https://docs.min.io/docs/minio-client-complete-guide for more commands
+  " > $TMPDIR/issue
+
   local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
-    --entrypoint=/bin/bash "$PLUGIN_MINIO_CLIENT_IMAGE" \
-    -c "
-    export SHELL=/bin/bash;
-    mc --quiet --autocompletion;
-    export PS1=\"\e[0;32m mc ($SERVICE_NAME)> \e[0m\";
-    echo \"alias ls='mc ls $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias cp='mc cp $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias cat='mc cat $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias mkdir='mc mb $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias pipe='mc pipe $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias find='mc find $SERVICE_NAME'\" >> ~/.bashrc;
-    echo \"alias tree='mc tree $SERVICE_NAME'\" >> ~/.bashrc;
-
-    echo 'For convenience, ls, cp, cat, mkdir, pipe, find, tree have been aliased to run \'mc <command> ${SERVICE_NAME}\'';
-    echo 'See https://docs.min.io/docs/minio-client-complete-guide for more commands';
-    bash
-    " > /dev/null
+    --entrypoint=/bin/bash \
+    -v $TMPDIR/.bashrc:/root/.bashrc
+    -v $TMPDIR/issue:/etc/issue
+    "$PLUGIN_MINIO_CLIENT_IMAGE" > /dev/null
 }
