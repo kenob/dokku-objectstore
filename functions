@@ -221,9 +221,13 @@ service_connect() {
   See https://docs.min.io/docs/minio-client-complete-guide for more commands
   " > $TMPDIR/issue
 
+  local SERVICE_TTY_OPTS
+  has_tty && SERVICE_TTY_OPTS="-t"
+
   local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
   docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -it \
+    --env=LANG=C.UTF-8 --env=LC_ALL=C.UTF-8 -i $SERVICE_TTY_OPTS \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/sh \
     -v $TMPDIR/issue:/etc/issue \
