@@ -73,8 +73,8 @@ service_create_container() {
 
   dokku_log_verbose_quiet "Setting up user"
   local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" 
-    -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}"
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
+    -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/sh "$PLUGIN_MINIO_CLIENT_IMAGE" \
     -c "
     mc admin user add $SERVICE_NAME $ACCESS_KEY $SECRET_KEY;
@@ -202,8 +202,8 @@ service_connect() {
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
 
   local TARGET_IP_ADDRESS="$(docker inspect $SERVICE_NAME:$PLUGIN_COMMAND_PREFIX --format '{{ .NetworkSettings.IPAddress }}')"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" 
-    -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}"
+  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
+    -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/bash "$PLUGIN_MINIO_CLIENT_IMAGE" \
     -c "
     mc --autocompletion
