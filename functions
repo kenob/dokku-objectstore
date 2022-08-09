@@ -204,6 +204,7 @@ service_connect() {
   trap 'rm -rf "$TMPDIR" > /dev/null' RETURN INT TERM EXIT
 
   echo "
+  export SHELL=/bin/bash
   export PS1=\"\e[0;32m mc ($SERVICE_NAME)> \e[0m\";
   alias ls='mc ls $SERVICE_NAME'
   alias cp='mc cp $SERVICE_NAME'
@@ -230,5 +231,5 @@ service_connect() {
     --entrypoint=/bin/bash \
     -v $TMPDIR/issue:/etc/issue \
     -v $TMPDIR/.bashrc:/root/.bashrc \
-    "$PLUGIN_MINIO_CLIENT_IMAGE" -c bash
+    "$PLUGIN_MINIO_CLIENT_IMAGE"
 }
