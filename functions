@@ -21,6 +21,8 @@ is_valid_service_name() {
   return 1
 }
 
+REGION=us-east-1
+
 service_create_container() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
@@ -57,6 +59,7 @@ service_create_container() {
     -v "$SERVICE_HOST_ROOT/data:/var/lib/minio/data" \
     -e "MINIO_ROOT_USER=$ROOT_USER" \
     -e "MINIO_ROOT_PASSWORD=$ROOT_PASSWORD" \
+    -e "MINIO_SITE_REGION=$REGION" \
     --env-file="$SERVICE_ROOT/ENV" \
     -d --restart always \
     --label dokku=service \
@@ -193,8 +196,8 @@ service_start() {
 service_connect() {
   local SERVICE="$1"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
-  local ACCESS_KEY="$(service_access_key "$SERVICE")"
-  local SECRET_KEY="$(service_secret_key "$SERVICE")"
+  local ACCESS_KEY="$(service_root_user "$SERVICE")"
+  local SECRET_KEY="$(service_root_password "$SERVICE")"
 
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local DATABASE_NAME="$(get_database_name "$SERVICE")"
