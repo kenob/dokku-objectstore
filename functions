@@ -231,5 +231,5 @@ service_connect() {
     --entrypoint=/bin/bash \
     -v $TMPDIR/issue:/etc/issue \
     -v $TMPDIR/.bashrc:/root/.bashrc \
-    "$PLUGIN_MINIO_CLIENT_IMAGE" > /dev/null
+    "$PLUGIN_MINIO_CLIENT_IMAGE"
 }
