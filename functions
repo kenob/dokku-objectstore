@@ -206,13 +206,13 @@ service_connect() {
   echo "
   export SHELL=/bin/bash
   export PS1=\"\e[0;32m mc ($SERVICE_NAME)> \e[0m\";
-  alias ls='mc ls $SERVICE_NAME'
-  alias cp='mc cp $SERVICE_NAME'
-  alias cat='mc cat $SERVICE_NAME'
-  alias mkdir='mc mb $SERVICE_NAME'
-  alias pipe='mc pipe $SERVICE_NAME'
-  alias find='mc find $SERVICE_NAME'
-  alias tree='mc tree $SERVICE_NAME'
+  alias ls='mc ls \"$SERVICE_NAME\"'
+  alias cp='mc cp \"$SERVICE_NAME\"'
+  alias cat='mc cat \"$SERVICE_NAME\"'
+  alias mkdir='mc mb \"$SERVICE_NAME\"'
+  alias pipe='mc pipe \"$SERVICE_NAME\"'
+  alias find='mc find \"$SERVICE_NAME\"'
+  alias tree='mc tree \"$SERVICE_NAME\"'
   mc --quiet --autocompletion > /dev/null
   " > $TMPDIR/.bashrc
 
