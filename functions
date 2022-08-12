@@ -54,7 +54,7 @@ service_create_container() {
   [[ -f "$SERVICE_ROOT/IMAGE_VERSION" ]] && PLUGIN_IMAGE_VERSION="$(cat "$SERVICE_ROOT/IMAGE_VERSION")"
 
   # shellcheck disable=SC2086
-  ID=$(docker run --name "$SERVICE_NAME" \
+  ID=$("$DOCKER_BIN" run --name "$SERVICE_NAME" \
     $MEMORY_LIMIT $SHM_SIZE \
     -v "$SERVICE_HOST_ROOT/data:/var/lib/minio/data" \
     -e "MINIO_ROOT_USER=$ROOT_USER" \
@@ -70,11 +70,11 @@ service_create_container() {
   echo "$ID" >"$SERVICE_ROOT/ID"
 
   dokku_log_verbose_quiet "Waiting for container to be ready"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
+  "$DOCKER_BIN" run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" "$PLUGIN_WAIT_IMAGE" -p "$PLUGIN_DATASTORE_WAIT_PORT" >/dev/null
 
   dokku_log_verbose_quiet "Setting up user"
-  local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
+  local TARGET_IP_ADDRESS="$("$DOCKER_BIN" inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
+  "$DOCKER_BIN" run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     -e "MC_HOST_$SERVICE_NAME=http://${ROOT_USER}:${ROOT_PASSWORD}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/sh "$PLUGIN_MINIO_CLIENT_IMAGE" \
     -c "
@@ -84,7 +84,7 @@ service_create_container() {
 
   dokku_log_verbose_quiet "Securing connection to database"
 #   service_stop "$SERVICE" >/dev/null
-#   docker run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/minio/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}") && pwd)/scripts/enable_ssl.sh" &>/dev/null
+#   "$DOCKER_BIN" run --rm -i -v "$SERVICE_HOST_ROOT/data:/var/lib/minio/data" "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" bash -s <"$(cd "$(dirname "${BASH_SOURCE[0]}") && pwd)/scripts/enable_ssl.sh" &>/dev/null
 
 #   PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
 #   docker start "$PREVIOUS_ID" >/dev/null
@@ -111,7 +111,7 @@ service_create() {
       dokku_log_warn "$PLUGIN_SERVICE service creation failed"
       exit 1
     fi
-    docker pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
+    "$DOCKER_BIN" pull "$PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION" || dokku_log_fail "$PLUGIN_SERVICE image $PLUGIN_IMAGE:$PLUGIN_IMAGE_VERSION pull failed"
   fi
 
   plugn trigger service-action pre-create "$PLUGIN_COMMAND_PREFIX" "$SERVICE"
@@ -162,7 +162,7 @@ service_start() {
   local QUIET="$2"
   local SERVICE_ROOT="$PLUGIN_DATA_ROOT/$SERVICE"
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
-  local ID=$(docker ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local ID=$("$DOCKER_BIN" ps -aq --no-trunc --filter "status=running" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   if [[ -n $ID ]]; then
     [[ -z $QUIET ]] && dokku_log_warn "Service is already started"
     if [[ ! -f "$SERVICE_ROOT/ID" ]] || [[ "$(cat "$SERVICE_ROOT/ID")" != "$ID" ]]; then
@@ -173,11 +173,11 @@ service_start() {
   fi
 
   dokku_log_info2_quiet "Starting container"
-  local PREVIOUS_ID=$(docker ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
+  local PREVIOUS_ID=$("$DOCKER_BIN" ps -aq --no-trunc --filter "status=exited" --filter "name=^/$SERVICE_NAME$" --format '{{ .ID }}') || true
   local PASSWORD="$(service_password "$SERVICE")"
 
   if [[ -n $PREVIOUS_ID ]]; then
-    docker start "$PREVIOUS_ID" >/dev/null
+    "$DOCKER_BIN" start "$PREVIOUS_ID" >/dev/null
     service_port_unpause "$SERVICE"
     dokku_log_info2 "Container started"
   elif service_image_exists "$SERVICE" && [[ -n "$PASSWORD" ]]; then
@@ -227,8 +227,8 @@ service_connect() {
   local SERVICE_TTY_OPTS
   has_tty && SERVICE_TTY_OPTS="-t"
 
-  local TARGET_IP_ADDRESS="$(docker inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
-  docker run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
+  local TARGET_IP_ADDRESS="$("$DOCKER_BIN" inspect $ID --format '{{ .NetworkSettings.IPAddress }}')"
+  "$DOCKER_BIN" run --rm --link "$SERVICE_NAME:$PLUGIN_COMMAND_PREFIX" \
     --env=LANG=C.UTF-8 --env=LC_ALL=C.UTF-8 -i $SERVICE_TTY_OPTS \
     -e "MC_HOST_$SERVICE_NAME=http://${ACCESS_KEY}:${SECRET_KEY}@${TARGET_IP_ADDRESS}:${PLUGIN_DATASTORE_PORTS[0]}" \
     --entrypoint=/bin/bash \
