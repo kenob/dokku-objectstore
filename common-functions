@@ -633,9 +633,9 @@ service_link() {
   if [[ "$DOKKU_GLOBAL_FLAGS" == *"--no-restart"* ]]; then
     no_restart_flag="--no-restart"
   fi
-  config_set $no_restart_flag "$APP" "${ALIAS}_URL=$SERVICE_URL"
-  config_set $no_restart_flag "$APP" "S3_ACCESS_KEY=$ACCESS_KEY"
-  config_set $no_restart_flag "$APP" "S3_SECRET_KEY=$SECRET_KEY"
+  config_set $no_restart_flag "$APP" "${ALIAS}_ENDPOINT_URL=$SERVICE_URL"
+  config_set $no_restart_flag "$APP" "${ALIAS}_ACCESS_KEY=$ACCESS_KEY"
+  config_set $no_restart_flag "$APP" "${ALIAS}_SECRET_KEY=$SECRET_KEY"
   plugn trigger service-action post-link-complete "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
 }
 
