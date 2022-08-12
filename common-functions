@@ -976,7 +976,7 @@ service_unlink() {
   local SERVICE_NAME="$(get_service_name "$SERVICE")"
   local EXISTING_CONFIG=$(config_all "$APP")
   local SERVICE_DNS_HOSTNAME=$(service_dns_hostname "$SERVICE")
-  local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL|$ACCESS_KEY|$SECRET_KEY" | cut -d: -f1)) || true
+  local LINK=($(echo "$EXISTING_CONFIG" | grep "$SERVICE_URL\|$ACCESS_KEY\|$SECRET_KEY" | cut -d: -f1)) || true
 
   plugn trigger service-action pre-unlink "$PLUGIN_COMMAND_PREFIX" "$SERVICE" "$APP"
   remove_from_links_file "$SERVICE" "$APP"
